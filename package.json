@@ -4,7 +4,11 @@
   "description": "REST API backend for Code-Red disaster management chatbot with Hinglish support, ready for in-app integration.",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "dev": "node app.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "author": "umesh + AI assistant",
   "license": "MIT",
