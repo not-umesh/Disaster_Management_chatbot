@@ -50,7 +50,7 @@ app.post('/api/message', async (req, res) => {
   try {
     if (process.env.GEMINI_API_KEY) {
       const geminiRes = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
         {
           contents: [{
             parts: [{
@@ -93,12 +93,15 @@ app.post('/api/message', async (req, res) => {
     }
   } catch (err) {
     console.error('Error processing request:', err.message);
+    console.error('Error details:', err.response?.data);
     
     // Check if the error is from API
     if (err.response?.status === 401) {
       reply = "Error: Invalid API key. Please check the key is set up correctly in Render environment variables.";
     } else if (err.response?.status === 404) {
       reply = "Error: API endpoint not found. Please check the API key and deployment settings.";
+    } else if (err.response?.status === 400) {
+      reply = "Error: Bad request to API. Please check the request format.";
     } else {
       reply = "Sorry, there was an error processing your request. Please try again later.";
     }
