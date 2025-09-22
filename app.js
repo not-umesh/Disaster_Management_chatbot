@@ -45,10 +45,27 @@ app.post('/api/message', async (req, res) => {
     systemPrompt += ` The user's location is: ${location}.`;
   }
 
-  // Call OpenAI API (or mock for now)
-  let reply = "Sorry, the chatbot backend is not connected to OpenAI yet.";
+  // Call Gemini API (or mock for now)
+  let reply = "";
   try {
-    if (process.env.OPENAI_API_KEY) {
+    if (process.env.GEMINI_API_KEY) {
+      const geminiRes = await axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        {
+          contents: [{
+            parts: [{
+              text: `${systemPrompt}\n\nUser: ${message}`
+            }]
+          }]
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      reply = geminiRes.data.candidates[0].content.parts[0].text.trim();
+    } else if (process.env.OPENAI_API_KEY) {
       const openaiRes = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
@@ -75,8 +92,16 @@ app.post('/api/message', async (req, res) => {
         : "This is a demo reply. You can ask anything related to disaster management!";
     }
   } catch (err) {
-    reply = "Sorry, there was an error processing your request.";
-    console.error(err);
+    console.error('Error processing request:', err.message);
+    
+    // Check if the error is from API
+    if (err.response?.status === 401) {
+      reply = "Error: Invalid API key. Please check the key is set up correctly in Render environment variables.";
+    } else if (err.response?.status === 404) {
+      reply = "Error: API endpoint not found. Please check the API key and deployment settings.";
+    } else {
+      reply = "Sorry, there was an error processing your request. Please try again later.";
+    }
   }
 
   res.json({ reply });
